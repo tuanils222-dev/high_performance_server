@@ -35,37 +35,36 @@ The server program consists of:
 I used a tool called [wrk](https://github.com/wg/wrk) to benchmark this HTTP server. The tests were performed on my laptop with the following specs:
 
 ```bash
-Model: Thinkpad T480
-OS: Ubuntu 18.04 TLS x84_64
-Kernel: 4.18.0-24-generic
-CPU: Intel i7-8550 (8) @ 4.000 GHz
-GPU: Intel UHD Graphics 620
-Memory: 6010 MiB / 15803 MiB
+Model: Dell Pro 14 Essential PV14250
+OS: Ubuntu 24.04.3 LTS x86_64
+CPU: Intel 7 150U (12) @ 5.400GHz
+GPU: Intel Graphics
+Memory: 8386MiB / 15678MiB
 ```
 
 Here are the results for two test runs. Each test ran for 1 minute, with 10 client threads. The first test had only 500 concurrent connections, while the second test had 10000.
 
 ```bash
-$ ./wrk -t10 -c500 -d60s http://0.0.0.0:8080/
+$ wrk -t10 -c500 -d60s http://0.0.0.0:8080/
 Running 1m test @ http://0.0.0.0:8080/
   10 threads and 500 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     5.01ms    1.31ms  57.86ms   86.35%
-    Req/Sec     9.94k     0.99k   36.28k    76.69%
-  5933266 requests in 1.00m, 441.36MB read
-Requests/sec:  98760.82
-Transfer/sec:      7.35MB
+    Latency     1.97ms  671.43us  19.06ms   61.20%
+    Req/Sec    25.44k     3.46k   37.56k    66.90%
+  15188735 requests in 1.00m, 1.10GB read
+Requests/sec: 253007.77
+Transfer/sec:     18.82MB
 ```
 
 ```bash
-$ ./wrk -t10 -c10000 -d60s http://0.0.0.0:8080/
+$ wrk -t10 -c10000 -d60s http://0.0.0.0:8080/
 Running 1m test @ http://0.0.0.0:8080/
   10 threads and 10000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   111.78ms   21.38ms 403.80ms   76.79%
-    Req/Sec     8.73k     1.42k   18.77k    75.62%
-  5174508 requests in 1.00m, 384.91MB read
-Requests/sec:  86123.84
-Transfer/sec:      6.41MB
+    Latency    47.89ms   19.48ms 511.78ms   59.99%
+    Req/Sec    20.85k     2.43k   30.79k    66.62%
+  12446504 requests in 1.00m, 0.90GB read
+Requests/sec: 207104.70
+Transfer/sec:     15.41MB
 
 ```
