@@ -1,81 +1,71 @@
-# High-Performance C++ HTTP Server
+# High Performance HTTP/1.1 Server
 
-A lightweight, ultra-fast HTTP/1.1 web server built from scratch using C++ and the Linux System API. This project demonstrates advanced system programming techniques to achieve high concurrency and throughput.
+Implementation of a high performance HTTP server in C++
 
-## 🚀 Performance Highlights
+## Features
 
-Tested on a modern Linux environment with `wrk`:
+- Can handle multiple concurrent connections, tested up to 10k.
+- Support basic HTTP request and response. Provide an extensible framework to implement other HTTP features.
+- HTTP/1.1: Persistent connection is enabled by default.
 
-* **Throughput:** **~141,000+ Requests Per Second (RPS)**.
-* **Concurrency:** Successfully handles **10,000+ concurrent connections** (C10K).
-* **Latency:** Average latency of **~33ms** under extreme 10k connection load.
-* **Efficiency:** Minimal CPU and memory overhead due to a non-blocking event-driven design.
-
-## 🛠 Technical Features
-
-* **I/O Multiplexing:** Powered by **Linux `epoll**` in **Edge-Triggered (EPOLLET)** mode for  event notification.
-* **Multi-threading:** Scalable architecture using `SO_REUSEPORT` to distribute incoming traffic across all available CPU cores.
-* **Non-blocking I/O:** Every socket operation is non-blocking to prevent thread stalls.
-* **HTTP/1.1 Support:** * Persistent connections (**Keep-Alive**) for reduced TCP handshake overhead.
-* Static routing for multiple pages (Home, About).
-* Accurate `Content-Length` and `Content-Type` header management.
-
-
-* **Optimizations:**
-* Disabled Nagle's algorithm (`TCP_NODELAY`) for low-latency response.
-* Pre-cached HTTP responses to eliminate string manipulation overhead during hot paths.
-* Zero-dependency: Built strictly using Linux System APIs and Standard C++11.
-
-
-
-## 📁 Project Structure
-
-* `server.cpp`: Main source code containing the event loop, thread pool, and routing logic.
-* `README.md`: Project documentation and benchmark results.
-
-## ⚡ Getting Started
-
-### Prerequisites
-
-* Linux Kernel 3.9 or later (required for `SO_REUSEPORT`).
-* GCC/G++ compiler.
-
-### Compilation
+## Quick start
 
 ```bash
-g++ -o server server.cpp
-
+mkdir build && cd build
+cmake ..
+make
+./test_high_performance_server # Run unit tests
+./high_performance_server          # Start the HTTP server on port 8080
 ```
 
-### Configuration
+- There are two endpoints available at `/` and `/hello.html` which are created for demo purpose.
+- In order to have multiple concurrent connections, make sure to raise the resource limit (with `ulimit`) before running the server. A non-root user by default can have about 1000 file descriptors opened, which corresponds to 1000 active clients.
 
-Before running, increase the system's open file limit to support high concurrency:
+## Design
+
+The server program consists of:
+
+- 1 main thread for user interaction.
+- 1 listener thread to accept incoming clients.
+- 5 worker threads to process HTTP requests and sends response back to client.
+- Utility functions to parse and manipulate HTTP requests and repsonses conveniently.
+
+## Benchmark
+
+I used a tool called [wrk](https://github.com/wg/wrk) to benchmark this HTTP server. The tests were performed on my laptop with the following specs:
 
 ```bash
-ulimit -n 65535
-
+Model: Thinkpad T480
+OS: Ubuntu 18.04 TLS x84_64
+Kernel: 4.18.0-24-generic
+CPU: Intel i7-8550 (8) @ 4.000 GHz
+GPU: Intel UHD Graphics 620
+Memory: 6010 MiB / 15803 MiB
 ```
 
-### Running the Server
+Here are the results for two test runs. Each test ran for 1 minute, with 10 client threads. The first test had only 500 concurrent connections, while the second test had 10000.
 
 ```bash
-./server
-
+$ ./wrk -t10 -c500 -d60s http://0.0.0.0:8080/
+Running 1m test @ http://0.0.0.0:8080/
+  10 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     5.01ms    1.31ms  57.86ms   86.35%
+    Req/Sec     9.94k     0.99k   36.28k    76.69%
+  5933266 requests in 1.00m, 441.36MB read
+Requests/sec:  98760.82
+Transfer/sec:      7.35MB
 ```
-
-The server will start and listen on `http://localhost:8080`.
-
-## 📊 Benchmarking
-
-To reproduce the results, use `wrk`:
 
 ```bash
-wrk -t4 -c10000 -d10s http://localhost:8080/
+$ ./wrk -t10 -c10000 -d60s http://0.0.0.0:8080/
+Running 1m test @ http://0.0.0.0:8080/
+  10 threads and 10000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   111.78ms   21.38ms 403.80ms   76.79%
+    Req/Sec     8.73k     1.42k   18.77k    75.62%
+  5174508 requests in 1.00m, 384.91MB read
+Requests/sec:  86123.84
+Transfer/sec:      6.41MB
 
 ```
-
-## 📝 Supported Routes
-
-* `GET /` : Returns the home page with a navigation link.
-* `GET /about` : Returns a simple about page.
-* `Other` : Returns a standard `404 Not Found` response.
