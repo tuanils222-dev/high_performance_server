@@ -1,5 +1,4 @@
-// Defines the HTTP server object with some constants and structs
-// useful for request handling and improving performance
+// HTTP server with epoll-based event handling and thread pool for concurrent connections
 
 #ifndef HTTP_SERVER_H_
 #define HTTP_SERVER_H_
@@ -20,8 +19,7 @@
 
 namespace high_performance_server {
 
-// Maximum size of an HTTP message is limited by how much bytes
-// we can read or send via socket each time
+// Maximum HTTP message size per socket read/write operation
 constexpr size_t kMaxBufferSize = 4096;
 
 struct EventData {
@@ -35,12 +33,10 @@ struct EventData {
 // A request handler should expect a request as argument and returns a response
 using HttpRequestHandler_t = std::function<HttpResponse(const HttpRequest &)>;
 
-// The server consists of:
-// - 1 main thread
-// - 1 listener thread that is responsible for accepting new connections
-// - Possibly many threads that process HTTP messages and communicate with
-// clients via socket.
-//   The number of workers is defined by a constant
+// HTTP server with multi-threaded architecture:
+// - Main thread for user interaction
+// - Listener thread for accepting connections
+// - Worker thread pool for processing requests
 class HttpServer {
 public:
   explicit HttpServer(const std::string &host, std::uint16_t port);

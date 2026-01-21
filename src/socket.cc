@@ -34,8 +34,6 @@ bool Socket::Start() {
   }
 
   if (listen(sock_fd_, kBacklogSize) < 0) {
-    // std::ostringstream msg;
-    // msg << "Failed to listen on port " << port_;
     return false;
   }
 

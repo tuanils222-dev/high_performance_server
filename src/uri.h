@@ -1,5 +1,4 @@
-// Define object that can be used to represent a Unique Resource Identifier
-// which is useful for parsing and request handling
+// URI parsing and representation for HTTP request routing
 
 #ifndef URI_H_
 #define URI_H_
@@ -12,8 +11,6 @@
 
 namespace high_performance_server {
 
-// A Uri object will contain a valid scheme (for example: HTTP), host,
-// port, and the actual URI path
 class Uri {
 public:
   Uri() = default;
@@ -36,7 +33,7 @@ public:
   std::string path() const { return path_; }
 
 private:
-  // Only the path is supported for now
+  // TODO: Add support for scheme, host, and port parsing
   std::string path_;
   std::string scheme_;
   std::string host_;

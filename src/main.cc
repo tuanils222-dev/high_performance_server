@@ -45,7 +45,6 @@ int main(void) {
   int port = 8080;
   HttpServer server(host, port);
 
-  // Register a few endpoints for demo and benchmarking
   auto say_hello = [](const HttpRequest& request) -> HttpResponse {
     HttpResponse response(HttpStatusCode::Ok);
     response.SetHeader("Content-Type", "text/plain");
@@ -72,27 +71,20 @@ int main(void) {
   server.RegisterHttpRequestHandler("/welcome", HttpMethod::GET, send_html);
 
   try {
-    // std::cout << "Setting new limits for file descriptor count.." <<
-    // std::endl; ensure_enough_resource(RLIMIT_NOFILE, 15000, 15000);
-
-    // std::cout << "Setting new limits for number of threads.." << std::endl;
-    // ensure_enough_resource(RLIMIT_NPROC, 60000, 60000);
-
-    std::cout << "Starting the web server.." << std::endl;
+    std::cout << "Starting server on " << host << ":" << port << "..." << std::endl;
     server.Start();
-    std::cout << "Server listening on " << host << ":" << port << std::endl;
+    std::cout << "Server running. Type 'quit' to stop." << std::endl;
 
-    std::cout << "Enter [quit] to stop the server" << std::endl;
     std::string command;
     while (std::cin >> command, command != "quit") {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    std::cout << "'quit' command entered. Stopping the web server.."
-              << std::endl;
+
+    std::cout << "Stopping server..." << std::endl;
     server.Stop();
-    std::cout << "Server stopped" << std::endl;
+    std::cout << "Server stopped." << std::endl;
   } catch (std::exception& e) {
-    std::cerr << "An error occurred: " << e.what() << std::endl;
+    std::cerr << "Error: " << e.what() << std::endl;
     return -1;
   }
 
