@@ -129,8 +129,8 @@ class HttpRequest : public HttpMessageInterface {
   HttpMethod method() const { return method_; }
   Uri uri() const { return uri_; }
 
-  friend std::string to_string(const HttpRequest& request);
-  friend HttpRequest string_to_request(const std::string& request_string);
+  friend std::string toString(const HttpRequest& request);
+  friend HttpRequest stringToRequest(const std::string& request_string);
 
  private:
   HttpMethod method_;
@@ -150,18 +150,18 @@ class HttpResponse : public HttpMessageInterface {
 
   HttpStatusCode status_code() const { return status_code_; }
 
-  friend std::string to_string(const HttpResponse& request, bool send_content);
-  friend HttpResponse string_to_response(const std::string& response_string);
+  friend std::string toString(const HttpResponse& request, bool send_content);
+  friend HttpResponse stringToResponse(const std::string& response_string);
 
  private:
   HttpStatusCode status_code_;
 };
 
 // Utility functions to convert HTTP message objects to string and vice versa
-std::string to_string(const HttpRequest& request);
-std::string to_string(const HttpResponse& response, bool send_content = true);
-HttpRequest string_to_request(const std::string& request_string);
-HttpResponse string_to_response(const std::string& response_string);
+std::string toString(const HttpRequest& request);
+std::string toString(const HttpResponse& response, bool send_content = true);
+HttpRequest stringToRequest(const std::string& request_string);
+HttpResponse stringToResponse(const std::string& response_string);
 
 }  // namespace high_performance_server
 

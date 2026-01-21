@@ -33,7 +33,6 @@ public:
   std::string path() const { return path_; }
 
 private:
-  // TODO: Add support for scheme, host, and port parsing
   std::string path_;
   std::string scheme_;
   std::string host_;

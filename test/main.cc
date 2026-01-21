@@ -66,7 +66,7 @@ void test_request_to_string() {
   expected_str += "Content-Length: 13\r\n\r\n";
   expected_str += "hello, world\n";
 
-  EXPECT_TRUE(to_string(request) == expected_str);
+  EXPECT_TRUE(toString(request) == expected_str);
 }
 
 void test_response_to_string() {
@@ -76,7 +76,7 @@ void test_response_to_string() {
   std::string expected_str;
   expected_str += "HTTP/1.1 500 Internal Server Error\r\n\r\n";
 
-  EXPECT_TRUE(to_string(response) == expected_str);
+  EXPECT_TRUE(toString(response) == expected_str);
 }
 
 int main(void) {

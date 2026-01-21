@@ -82,8 +82,8 @@ void HttpServer::Listen() {
     active = true;
     client_data = new EventData();
     client_data->file_descriptor = client_fd;
-    control_epoll_event(worker_epoll_fd_[current_worker], EPOLL_CTL_ADD,
-                        client_fd, EPOLLIN, client_data);
+    controlEpollEvent(worker_epoll_fd_[current_worker], EPOLL_CTL_ADD,
+                      client_fd, EPOLLIN, client_data);
     current_worker++;
     if (current_worker == HttpServer::kThreadPoolSize)
       current_worker = 0;
@@ -113,14 +113,14 @@ void HttpServer::ProcessEvents(int worker_id) {
       data = reinterpret_cast<EventData *>(current_event.data.ptr);
       if ((current_event.events & EPOLLHUP) ||
           (current_event.events & EPOLLERR)) {
-        control_epoll_event(epoll_fd, EPOLL_CTL_DEL, data->file_descriptor);
+        controlEpollEvent(epoll_fd, EPOLL_CTL_DEL, data->file_descriptor);
         close(data->file_descriptor);
         delete data;
       } else if ((current_event.events == EPOLLIN) ||
                  (current_event.events == EPOLLOUT)) {
         HandleEpollEvent(epoll_fd, data, current_event.events);
       } else {
-        control_epoll_event(epoll_fd, EPOLL_CTL_DEL, data->file_descriptor);
+        controlEpollEvent(epoll_fd, EPOLL_CTL_DEL, data->file_descriptor);
         close(data->file_descriptor);
         delete data;
       }
@@ -140,18 +140,18 @@ void HttpServer::HandleEpollEvent(int epoll_fd, EventData *data,
       response = new EventData();
       response->file_descriptor = fd;
       HandleHttpData(*request, response);
-      control_epoll_event(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLOUT, response);
+      controlEpollEvent(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLOUT, response);
       delete request;
     } else if (byte_count == 0) {
-      control_epoll_event(epoll_fd, EPOLL_CTL_DEL, fd);
+      controlEpollEvent(epoll_fd, EPOLL_CTL_DEL, fd);
       close(fd);
       delete request;
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         request->file_descriptor = fd;
-        control_epoll_event(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLIN, request);
+        controlEpollEvent(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLIN, request);
       } else {
-        control_epoll_event(epoll_fd, EPOLL_CTL_DEL, fd);
+        controlEpollEvent(epoll_fd, EPOLL_CTL_DEL, fd);
         close(fd);
         delete request;
       }
@@ -164,18 +164,18 @@ void HttpServer::HandleEpollEvent(int epoll_fd, EventData *data,
       if (byte_count < response->length) {
         response->cursor += byte_count;
         response->length -= byte_count;
-        control_epoll_event(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLOUT, response);
+        controlEpollEvent(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLOUT, response);
       } else {
         request = new EventData();
         request->file_descriptor = fd;
-        control_epoll_event(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLIN, request);
+        controlEpollEvent(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLIN, request);
         delete response;
       }
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        control_epoll_event(epoll_fd, EPOLL_CTL_ADD, fd, EPOLLOUT, response);
+        controlEpollEvent(epoll_fd, EPOLL_CTL_ADD, fd, EPOLLOUT, response);
       } else {
-        control_epoll_event(epoll_fd, EPOLL_CTL_DEL, fd);
+        controlEpollEvent(epoll_fd, EPOLL_CTL_DEL, fd);
         close(fd);
         delete response;
       }
@@ -190,7 +190,7 @@ void HttpServer::HandleHttpData(const EventData &raw_request,
   HttpResponse http_response;
 
   try {
-    http_request = string_to_request(request_string);
+    http_request = stringToRequest(request_string);
     http_response = HandleHttpRequest(http_request);
   } catch (const std::invalid_argument &e) {
     http_response = HttpResponse(HttpStatusCode::BadRequest);
@@ -204,7 +204,7 @@ void HttpServer::HandleHttpData(const EventData &raw_request,
   }
 
   response_string =
-      to_string(http_response, http_request.method() != HttpMethod::HEAD);
+      toString(http_response, http_request.method() != HttpMethod::HEAD);
   memcpy(raw_response->buffer, response_string.c_str(), kMaxBufferSize);
   raw_response->length = response_string.length();
 }
@@ -221,8 +221,8 @@ HttpResponse HttpServer::HandleHttpRequest(const HttpRequest &request) {
   return callback_it->second(request);
 }
 
-void HttpServer::control_epoll_event(int epoll_fd, int op, int fd,
-                                     std::uint32_t events, void *data) {
+void HttpServer::controlEpollEvent(int epoll_fd, int op, int fd,
+                                   std::uint32_t events, void *data) {
   if (op == EPOLL_CTL_DEL) {
     if (epoll_ctl(epoll_fd, op, fd, nullptr) < 0) {
       throw std::runtime_error("Failed to remove file descriptor");

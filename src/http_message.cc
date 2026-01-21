@@ -132,7 +132,7 @@ HttpVersion string_to_version(const std::string& version_string) {
   }
 }
 
-std::string to_string(const HttpRequest& request) {
+std::string toString(const HttpRequest& request) {
   std::ostringstream oss;
 
   oss << to_string(request.method()) << ' ';
@@ -146,7 +146,7 @@ std::string to_string(const HttpRequest& request) {
   return oss.str();
 }
 
-std::string to_string(const HttpResponse& response, bool send_content) {
+std::string toString(const HttpResponse& response, bool send_content) {
   std::ostringstream oss;
 
   oss << to_string(response.version()) << ' ';
@@ -160,7 +160,7 @@ std::string to_string(const HttpResponse& response, bool send_content) {
   return oss.str();
 }
 
-HttpRequest string_to_request(const std::string& request_string) {
+HttpRequest stringToRequest(const std::string& request_string) {
   std::string start_line, header_lines, message_body;
   std::istringstream iss;
   HttpRequest request;
@@ -220,7 +220,7 @@ HttpRequest string_to_request(const std::string& request_string) {
   return request;
 }
 
-HttpResponse string_to_response(const std::string& response_string) {
+HttpResponse stringToResponse(const std::string& response_string) {
   throw std::logic_error("Method not implemented");
 }
 
