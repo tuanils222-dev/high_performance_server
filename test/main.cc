@@ -22,12 +22,12 @@ using namespace high_performance_server;
 int err = 0;
 
 void test_uri_path_to_lowercase() {
-  std::string path = "/SayHello.HTML?name=abc&message=welcome";
+  std::string path = "/Welcome?name=abc&message=hello";
   std::string lowercase_path;
   std::transform(path.begin(), path.end(), std::back_inserter(lowercase_path),
                  [](char c) { return tolower(c); });
 
-  Uri uri("/SayHello.html?name=abc&message=welcome");
+  Uri uri("/Welcome?name=abc&message=hello");
   EXPECT_TRUE(uri.path() == lowercase_path);
 }
 

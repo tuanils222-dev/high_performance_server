@@ -68,8 +68,8 @@ int main(void) {
 
   server.RegisterHttpRequestHandler("/", HttpMethod::HEAD, say_hello);
   server.RegisterHttpRequestHandler("/", HttpMethod::GET, say_hello);
-  server.RegisterHttpRequestHandler("/hello.html", HttpMethod::HEAD, send_html);
-  server.RegisterHttpRequestHandler("/hello.html", HttpMethod::GET, send_html);
+  server.RegisterHttpRequestHandler("/welcome", HttpMethod::HEAD, send_html);
+  server.RegisterHttpRequestHandler("/welcome", HttpMethod::GET, send_html);
 
   try {
     // std::cout << "Setting new limits for file descriptor count.." <<

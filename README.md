@@ -18,7 +18,7 @@ make
 ./high_performance_server          # Start the HTTP server on port 8080
 ```
 
-- There are two endpoints available at `/` and `/hello.html` which are created for demo purpose.
+- There are two endpoints available at `/` and `/welcome` which are created for demo purpose.
 - In order to have multiple concurrent connections, make sure to raise the resource limit (with `ulimit`) before running the server. A non-root user by default can have about 1000 file descriptors opened, which corresponds to 1000 active clients.
 
 ## Design
