@@ -12,15 +12,15 @@ Socket::Socket(const std::string &host, std::uint16_t port)
 int Socket::GetSocketFd() const { return sock_fd_; }
 
 bool Socket::Start() {
-  int opt = 1;
+  int socket_option = 1;
   sockaddr_in server_address;
 
   if ((sock_fd_ = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0) {
     return false;
   }
 
-  if (setsockopt(sock_fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
-                 sizeof(opt)) < 0) {
+  if (setsockopt(sock_fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &socket_option,
+                 sizeof(socket_option)) < 0) {
     return false;
   }
 

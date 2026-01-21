@@ -22,7 +22,7 @@ namespace high_performance_server {
 
 HttpServer::HttpServer(const std::string &host, std::uint16_t port)
     : running_(false), worker_epoll_fd_(),
-      rng_(std::chrono::steady_clock::now().time_since_epoch().count()),
+      random_generator_(std::chrono::steady_clock::now().time_since_epoch().count()),
       sleep_times_(10, 100), socket_(std::make_unique<Socket>(host, port)) {}
 
 void HttpServer::Start() {
@@ -70,7 +70,7 @@ void HttpServer::Listen() {
   while (running_) {
     if (!active) {
       std::this_thread::sleep_for(
-          std::chrono::microseconds(sleep_times_(rng_)));
+          std::chrono::microseconds(sleep_times_(random_generator_)));
     }
     client_fd = accept4(socket_->GetSocketFd(), (sockaddr *)&client_address,
                         &client_len, SOCK_NONBLOCK);
@@ -81,7 +81,7 @@ void HttpServer::Listen() {
 
     active = true;
     client_data = new EventData();
-    client_data->fd = client_fd;
+    client_data->file_descriptor = client_fd;
     control_epoll_event(worker_epoll_fd_[current_worker], EPOLL_CTL_ADD,
                         client_fd, EPOLLIN, client_data);
     current_worker++;
@@ -98,30 +98,30 @@ void HttpServer::ProcessEvents(int worker_id) {
   while (running_) {
     if (!active) {
       std::this_thread::sleep_for(
-          std::chrono::microseconds(sleep_times_(rng_)));
+          std::chrono::microseconds(sleep_times_(random_generator_)));
     }
-    int nfds = epoll_wait(worker_epoll_fd_[worker_id],
+    int num_events = epoll_wait(worker_epoll_fd_[worker_id],
                           worker_events_[worker_id], HttpServer::kMaxEvents, 0);
-    if (nfds <= 0) {
+    if (num_events <= 0) {
       active = false;
       continue;
     }
 
     active = true;
-    for (int i = 0; i < nfds; i++) {
+    for (int i = 0; i < num_events; i++) {
       const epoll_event &current_event = worker_events_[worker_id][i];
       data = reinterpret_cast<EventData *>(current_event.data.ptr);
       if ((current_event.events & EPOLLHUP) ||
           (current_event.events & EPOLLERR)) {
-        control_epoll_event(epoll_fd, EPOLL_CTL_DEL, data->fd);
-        close(data->fd);
+        control_epoll_event(epoll_fd, EPOLL_CTL_DEL, data->file_descriptor);
+        close(data->file_descriptor);
         delete data;
       } else if ((current_event.events == EPOLLIN) ||
                  (current_event.events == EPOLLOUT)) {
         HandleEpollEvent(epoll_fd, data, current_event.events);
       } else {
-        control_epoll_event(epoll_fd, EPOLL_CTL_DEL, data->fd);
-        close(data->fd);
+        control_epoll_event(epoll_fd, EPOLL_CTL_DEL, data->file_descriptor);
+        close(data->file_descriptor);
         delete data;
       }
     }
@@ -130,7 +130,7 @@ void HttpServer::ProcessEvents(int worker_id) {
 
 void HttpServer::HandleEpollEvent(int epoll_fd, EventData *data,
                                   std::uint32_t events) {
-  int fd = data->fd;
+  int fd = data->file_descriptor;
   EventData *request, *response;
 
   if (events == EPOLLIN) {
@@ -138,7 +138,7 @@ void HttpServer::HandleEpollEvent(int epoll_fd, EventData *data,
     ssize_t byte_count = recv(fd, request->buffer, kMaxBufferSize, 0);
     if (byte_count > 0) {
       response = new EventData();
-      response->fd = fd;
+      response->file_descriptor = fd;
       HandleHttpData(*request, response);
       control_epoll_event(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLOUT, response);
       delete request;
@@ -148,7 +148,7 @@ void HttpServer::HandleEpollEvent(int epoll_fd, EventData *data,
       delete request;
     } else {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        request->fd = fd;
+        request->file_descriptor = fd;
         control_epoll_event(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLIN, request);
       } else {
         control_epoll_event(epoll_fd, EPOLL_CTL_DEL, fd);
@@ -167,7 +167,7 @@ void HttpServer::HandleEpollEvent(int epoll_fd, EventData *data,
         control_epoll_event(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLOUT, response);
       } else {
         request = new EventData();
-        request->fd = fd;
+        request->file_descriptor = fd;
         control_epoll_event(epoll_fd, EPOLL_CTL_MOD, fd, EPOLLIN, request);
         delete response;
       }

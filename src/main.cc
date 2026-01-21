@@ -83,8 +83,8 @@ int main(void) {
     std::cout << "Stopping server..." << std::endl;
     server.Stop();
     std::cout << "Server stopped." << std::endl;
-  } catch (std::exception& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
+  } catch (std::exception& exception) {
+    std::cerr << "Error: " << exception.what() << std::endl;
     return -1;
   }
 

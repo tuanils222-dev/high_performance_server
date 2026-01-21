@@ -23,12 +23,50 @@ make
 
 ## Design
 
-The server program consists of:
+### Architecture Overview
 
-- 1 main thread for user interaction.
-- 1 listener thread to accept incoming clients.
-- 5 worker threads to process HTTP requests and sends response back to client.
-- Utility functions to parse and manipulate HTTP requests and repsonses conveniently.
+The server implements a **multi-threaded, event-driven architecture** using Linux epoll for high-performance I/O multiplexing:
+
+```
+┌─────────────┐
+│ Main Thread │  - User interaction and control
+└─────────────┘
+
+┌──────────────────┐
+│ Listener Thread  │  - Accepts new client connections
+└──────────────────┘  - Distributes to worker threads via round-robin
+
+┌────────────────────────────────────────────────┐
+│          Worker Thread Pool (5 threads)        │
+│  - Event-driven request processing (epoll)     │
+│  - Non-blocking I/O for concurrent handling    │
+│  - Each manages up to 10k concurrent events    │
+└────────────────────────────────────────────────┘
+```
+
+### Key Components
+
+**HTTP Message Parser**
+- Parses HTTP/1.1 requests and generates responses
+- Supports all standard HTTP methods (GET, HEAD, POST, etc.)
+- Extensible framework for custom headers and content types
+
+**Request Router**
+- URI-based request routing with method-specific handlers
+- Lambda-based handler registration for clean endpoint definitions
+- Automatic 404/405 responses for unmatched routes
+
+**Connection Management**
+- Persistent connections (HTTP/1.1 keep-alive)
+- Non-blocking socket operations
+- Efficient resource cleanup on connection close
+
+### Performance Optimizations
+
+- **Epoll-based event handling**: Scales efficiently with connection count
+- **Thread pool design**: Eliminates thread creation overhead
+- **Zero-copy operations**: Minimizes data copying where possible
+- **Round-robin load balancing**: Distributes connections evenly across workers
 
 ## Benchmark
 

@@ -138,8 +138,8 @@ std::string to_string(const HttpRequest& request) {
   oss << to_string(request.method()) << ' ';
   oss << request.uri().path() << ' ';
   oss << to_string(request.version()) << "\r\n";
-  for (const auto& p : request.headers())
-    oss << p.first << ": " << p.second << "\r\n";
+  for (const auto& header_pair : request.headers())
+    oss << header_pair.first << ": " << header_pair.second << "\r\n";
   oss << "\r\n";
   oss << request.content();
 
@@ -152,8 +152,8 @@ std::string to_string(const HttpResponse& response, bool send_content) {
   oss << to_string(response.version()) << ' ';
   oss << static_cast<int>(response.status_code()) << ' ';
   oss << to_string(response.status_code()) << "\r\n";
-  for (const auto& p : response.headers())
-    oss << p.first << ": " << p.second << "\r\n";
+  for (const auto& header_pair : response.headers())
+    oss << header_pair.first << ": " << header_pair.second << "\r\n";
   oss << "\r\n";
   if (send_content) oss << response.content();
 
@@ -167,22 +167,22 @@ HttpRequest string_to_request(const std::string& request_string) {
   std::string line, method, path, version;  // used for first line
   std::string key, value;                   // used for header fields
   Uri uri;
-  size_t lpos = 0, rpos = 0;
+  size_t left_pos = 0, right_pos = 0;
 
-  rpos = request_string.find("\r\n", lpos);
-  if (rpos == std::string::npos) {
+  right_pos = request_string.find("\r\n", left_pos);
+  if (right_pos == std::string::npos) {
     throw std::invalid_argument("Could not find request start line");
   }
 
-  start_line = request_string.substr(lpos, rpos - lpos);
-  lpos = rpos + 2;
-  rpos = request_string.find("\r\n\r\n", lpos);
-  if (rpos != std::string::npos) {  // has header
-    header_lines = request_string.substr(lpos, rpos - lpos);
-    lpos = rpos + 4;
-    rpos = request_string.length();
-    if (lpos < rpos) {
-      message_body = request_string.substr(lpos, rpos - lpos);
+  start_line = request_string.substr(left_pos, right_pos - left_pos);
+  left_pos = right_pos + 2;
+  right_pos = request_string.find("\r\n\r\n", left_pos);
+  if (right_pos != std::string::npos) {  // has header
+    header_lines = request_string.substr(left_pos, right_pos - left_pos);
+    left_pos = right_pos + 4;
+    right_pos = request_string.length();
+    if (left_pos < right_pos) {
+      message_body = request_string.substr(left_pos, right_pos - left_pos);
     }
   }
 

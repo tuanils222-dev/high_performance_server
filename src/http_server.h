@@ -23,8 +23,8 @@ namespace high_performance_server {
 constexpr size_t kMaxBufferSize = 4096;
 
 struct EventData {
-  EventData() : fd(0), length(0), cursor(0), buffer() {}
-  int fd;
+  EventData() : file_descriptor(0), length(0), cursor(0), buffer() {}
+  int file_descriptor;
   size_t length;
   size_t cursor;
   char buffer[kMaxBufferSize];
@@ -71,7 +71,7 @@ private:
   int worker_epoll_fd_[kThreadPoolSize];
   epoll_event worker_events_[kThreadPoolSize][kMaxEvents];
   std::map<Uri, std::map<HttpMethod, HttpRequestHandler_t>> request_handlers_;
-  std::mt19937 rng_;
+  std::mt19937 random_generator_;
   std::uniform_int_distribution<int> sleep_times_;
 
   void SetUpEpoll();
